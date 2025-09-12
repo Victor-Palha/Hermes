@@ -16,6 +16,7 @@ services:
       - ./localstack/init-aws.d:/etc/localstack/init/ready.d
 
   app:
+    container_name: hermes_app
     build: .
     networks:
       - hermes_network
