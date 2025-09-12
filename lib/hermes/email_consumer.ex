@@ -10,8 +10,8 @@ defmodule Hermes.EmailConsumer do
 
   use Broadway
 
-  alias Hermes.Mailer
-  import Swoosh.Email
+  # alias Hermes.Mailer
+  # import Swoosh.Email
 
   def start_link(_args) do
     Broadway.start_link(__MODULE__,
@@ -21,9 +21,14 @@ defmodule Hermes.EmailConsumer do
           {BroadwaySQS.Producer,
            queue_url: System.fetch_env!("SQS_QUEUE_URL"),
            config: [
-             access_key_id: [{:system, "AWS_ACCESS_KEY_ID"}, :instance_role],
-             secret_access_key: [{:system, "AWS_SECRET_ACCESS_KEY"}, :instance_role],
-             region: System.get_env("AWS_REGION") || "us-east-1"
+             access_key_id: System.get_env("AWS_ACCESS_KEY_ID", "test"),
+             secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY", "test"),
+             region: System.get_env("AWS_REGION", "us-east-1"),
+             scheme: System.get_env("AWS_SCHEME", "http://"),
+             host: System.get_env("AWS_HOST", "localstack"),
+             port: String.to_integer(System.get_env("AWS_PORT", "4566")),
+             receive_message_wait_time_seconds: 5,
+             wait_for_queue: true
            ]},
         concurrency: 2
       ],
@@ -39,8 +44,10 @@ defmodule Hermes.EmailConsumer do
       case decoded["type"] do
         "email" ->
           handle_email(decoded, message)
+
         "whatsapp" ->
           handle_whatsapp(decoded, message)
+
         _ ->
           IO.puts("Unknown message type: #{decoded["type"]}")
           Broadway.Message.failed(message, :unknown_message_type)
@@ -52,22 +59,24 @@ defmodule Hermes.EmailConsumer do
     end
   end
 
-  defp handle_email(%{"to" => to, "subject" => subject, "body" => body}, message) do
-    email =
-      new()
-      |> to(to)
-      |> from(System.get_env("SMTP_FROM") || "noreply@example.com")
-      |> subject(subject)
-      |> html_body(body)
+  defp handle_email(%{"to" => to, "subject" => subject, "body" => _body}, message) do
+    IO.puts("Received email for #{to} with subject #{subject}")
+    message
+    # email =
+    #   new()
+    #   |> to(to)
+    #   |> from(System.get_env("SMTP_FROM") || "noreply@example.com")
+    #   |> subject(subject)
+    #   |> html_body(body)
 
-    case Mailer.deliver(email) do
-      {:ok, _} ->
-        message
+    # case Mailer.deliver(email) do
+    #   {:ok, _} ->
+    #     message
 
-      {:error, reason} ->
-        IO.puts("Failed to send email: #{inspect(reason)}")
-        Broadway.Message.failed(message, reason)
-    end
+    #   {:error, reason} ->
+    #     IO.puts("Failed to send email: #{inspect(reason)}")
+    #     Broadway.Message.failed(message, reason)
+    # end
   end
 
   defp handle_whatsapp(%{"to" => to, "message" => msg}, message) do

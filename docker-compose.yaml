@@ -1,0 +1,30 @@
+services:
+  localstack:
+    container_name: localstack
+    image: localstack/localstack
+    networks:
+      - hermes_network
+    environment:
+      - SERVICES=sqs
+      - GATEWAY_LISTEN=0.0.0.0:4566
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    ports:
+      - "4566:4566"
+    volumes:
+      - ./localstack/init-aws.d:/etc/localstack/init/ready.d
+
+  app:
+    build: .
+    networks:
+      - hermes_network
+    env_file:
+      - .env
+    depends_on:
+      - localstack
+    command: ["./bin/hermes", "start"]
+
+networks:
+  hermes_network:
+    driver: bridge
