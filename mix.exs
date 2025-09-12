@@ -26,7 +26,9 @@ defmodule Hermes.MixProject do
       {:broadway_sqs, "~> 0.7.1"},
       {:hackney, "~> 1.9"},
       {:swoosh, "~> 1.19"},
-      {:gen_smtp, "~> 1.3"}
+      {:gen_smtp, "~> 1.3"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:jason, "~> 1.4"}
     ]
   end
 end
