@@ -28,7 +28,8 @@ defmodule Hermes.MixProject do
       {:swoosh, "~> 1.19"},
       {:gen_smtp, "~> 1.3"},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:jason, "~> 1.4"}
+      {:jason, "~> 1.4"},
+      {:tesla, "~> 1.11"},
     ]
   end
 end

@@ -10,6 +10,7 @@ Micro-serviço em Elixir projetado para envio confiável de notificações via e
 - **Alta Performance**: Processamento assíncrono e concorrente para lidar com picos de demanda
 - **Multi-Canal**: Suporte integrado para e-mail e WhatsApp com interface unificada
 - **Escalável**: Arquitetura horizontalmente escalável para crescer com sua aplicação
+- **Plugável** – facilmente extensível para novos canais de comunicação  
 
 Construído para ser o mensageiro confiável que sua aplicação precisa, mesmo sob as condições mais desafiadoras.
 
@@ -39,6 +40,11 @@ DEFAULT_FROM=noreply@example.com
 AWS_SCHEME=http://
 AWS_HOST=localstack
 AWS_PORT=4566
+
+# WhatsApp API
+WHATSAPP_PHONE_ID=your_phone_id
+WHATSAPP_API_ACCESS_TOKEN=your_access_token
+WHATSAPP_API_URL=https://graph.facebook.com/v17.0
 ```
 
 ---
@@ -54,6 +60,39 @@ docker compose up --build
 2. O LocalStack vai criar automaticamente a fila `notifications-email`.
 
 3. O Hermes vai iniciar e começar a processar mensagens da fila.
+
+---
+
+## Integrando sua API com o Hermes
+
+Para enviar mensagens para o Hermes, sua API deve publicar mensagens na fila SQS `notifications-email`. O formato da mensagem deve ser JSON, com os seguintes campos:
+### Para E-mail
+
+```json
+{
+  "type": "email",
+  "to": "<email>",
+  "subject": "<subject>",
+  "body": "<html>...</html>"
+}
+```
+- **Importante**
+  - O campo `to` pode ser uma string (um destinatário) ou uma lista de strings (múltiplos destinatários). 
+    - Exemplo: `"to": "user@example.com"` ou `"to": ["user1@example.com", "user2@example.com"]`
+  - O campo `body` deve conter HTML válido.
+
+### Para WhatsApp
+```json
+{
+  "type": "whatsapp",
+  "to": "<phone_number>",
+  "message": "<text_message>"
+}
+```
+- **Importante**
+  - O campo `to` pode ser uma string (um número) ou uma lista de strings (múltiplos números).
+    - Exemplo: `"to": "+5511999999999"` ou `"to": ["+5511999999999", "+5511888888888"]`
+  - O campo `message` deve conter o texto da mensagem.
 
 ---
 
