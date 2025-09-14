@@ -1,4 +1,4 @@
-defmodule Hermes.EmailConsumer do
+defmodule Hermes.HermesConsumer do
   @moduledoc """
   A Broadway consumer that processes messages from an AWS SQS queue.
   It handles two types of messages: email and WhatsApp.
@@ -10,8 +10,7 @@ defmodule Hermes.EmailConsumer do
 
   use Broadway
 
-  # alias Hermes.Mailer
-  # import Swoosh.Email
+  alias Hermes.{Email, Whatsapp}
 
   def start_link(_args) do
     Broadway.start_link(__MODULE__,
@@ -43,10 +42,10 @@ defmodule Hermes.EmailConsumer do
     with {:ok, decoded} <- Jason.decode(raw) do
       case decoded["type"] do
         "email" ->
-          handle_email(decoded, message)
+          Email.Notify.call(decoded, message)
 
         "whatsapp" ->
-          handle_whatsapp(decoded, message)
+          Whatsapp.Notify.call(decoded, message)
 
         _ ->
           IO.puts("Unknown message type: #{decoded["type"]}")
@@ -57,30 +56,5 @@ defmodule Hermes.EmailConsumer do
         IO.puts("Failed to decode message: #{reason}")
         Broadway.Message.failed(message, :invalid_json)
     end
-  end
-
-  defp handle_email(%{"to" => to, "subject" => subject, "body" => _body}, message) do
-    IO.puts("Received email for #{to} with subject #{subject}")
-    message
-    # email =
-    #   new()
-    #   |> to(to)
-    #   |> from(System.get_env("SMTP_FROM") || "noreply@example.com")
-    #   |> subject(subject)
-    #   |> html_body(body)
-
-    # case Mailer.deliver(email) do
-    #   {:ok, _} ->
-    #     message
-
-    #   {:error, reason} ->
-    #     IO.puts("Failed to send email: #{inspect(reason)}")
-    #     Broadway.Message.failed(message, reason)
-    # end
-  end
-
-  defp handle_whatsapp(%{"to" => to, "message" => msg}, message) do
-    IO.puts("Received WhatsApp message for #{to}: #{msg}")
-    message
   end
 end

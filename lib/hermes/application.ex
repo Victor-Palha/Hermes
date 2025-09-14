@@ -6,7 +6,7 @@ defmodule Hermes.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      {Hermes.EmailConsumer, []}
+      {Hermes.HermesConsumer, []}
     ]
 
     opts = [strategy: :one_for_one, name: Hermes.Supervisor]
